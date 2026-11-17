@@ -826,6 +826,17 @@ export class Panel {
 					}
 				});
 				els.push(show_source_el);
+
+				// text filter of source data lines
+				let src_filter_el = $('<div class="menu_line filter_line"><input type="text" class="panel_source_filter" placeholder="Filter source data..." title="Show only source data lines containing this text" spellcheck="false" autocomplete="off"></div>');
+				src_filter_el.find("INPUT")
+					.val(that.src_filter || "")
+					.on("input", function () {
+						that.src_filter = $(this).val();
+						that.renderSource();
+					})
+					.on("keydown keyup", (ev) => ev.stopPropagation()); // don't trigger UI hotkeys while typing
+				els.push(src_filter_el);
 			}
 		} else if (this.msg_type == "video") {
 			// message type info dialog
@@ -1099,10 +1110,10 @@ export class Panel {
 
 		if (this.src_visible) {
 			let ts = ev.timeStamp; // showing local stamp
-			$("#panel_source_" + this.n).html("Received: " + ts + "<br>" +
-					"&lt;" + raw_type + "&gt; " + raw_len + " " + (raw_type != "String" ? "B" : "chars") + "<br><br>" +
-					datahr,
-			); 
+			this.last_source_header = "Received: " + ts + "<br>" +
+					"&lt;" + raw_type + "&gt; " + raw_len + " " + (raw_type != "String" ? "B" : "chars") + "<br><br>";
+			this.last_source_data = datahr;
+			this.renderSource();
 
 			let newh = $("#panel_source_" + this.n).height();
 			//console.log('max_height='+this.max_height+' newh='+newh);
@@ -1111,6 +1122,25 @@ export class Panel {
 				this.max_height = newh;
 			}
 		}
+	}
+
+	/**
+	 * Renders the last received message into the source data view,
+	 * keeping only data lines matching the source filter (if any).
+	 */
+	renderSource() {
+		if (this.last_source_header === undefined) return;
+
+		let data = this.last_source_data;
+		const terms = (this.src_filter || "").toLowerCase().split(/\s+/).filter((t) => t.length);
+		if (terms.length) {
+			const lines = String(data).split("\n").filter((line) => {
+				const l = line.toLowerCase();
+				return terms.every((t) => l.indexOf(t) > -1);
+			});
+			data = lines.length ? lines.join("\n") : "-- no lines match filter --";
+		}
+		this.source_el.html(this.last_source_header + data);
 	}
 
 	onStream(stream) {

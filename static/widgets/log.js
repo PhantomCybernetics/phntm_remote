@@ -13,6 +13,7 @@ export class LogWidget extends SingleTypePanelWidgetBase {
 		super(panel, topic, 'log');
 
 		this.animation = null;
+		this.filter_terms = [];
 
 		this.widget_el.addClass("autoscroll");
 
@@ -42,6 +43,30 @@ export class LogWidget extends SingleTypePanelWidgetBase {
 			that.clear();
 		});
 		menu_els.push(clear_line_el);
+
+		// text filter
+		let filter_line_el = $('<div class="menu_line filter_line"><input type="text" class="log_filter" placeholder="Filter log..." title="Show only log lines containing this text" spellcheck="false" autocomplete="off"></div>');
+		filter_line_el.find("INPUT")
+			.val(this.filter_terms.join(" "))
+			.on("input", function () {
+				that.setFilter($(this).val());
+			})
+			.on("keydown keyup", (ev) => ev.stopPropagation()); // don't trigger UI hotkeys while typing
+		menu_els.push(filter_line_el);
+	}
+
+	setFilter(text) {
+		this.filter_terms = text.toLowerCase().split(/\s+/).filter((t) => t.length);
+		this.widget_el.find(".log_line").each((i, el) => {
+			$(el).toggleClass("filtered-out", !this.lineMatches(el));
+		});
+		this.widget_el.scrollTop(this.widget_el.prop("scrollHeight"));
+	}
+
+	lineMatches(line_el) {
+		if (!this.filter_terms.length) return true;
+		const text = $(line_el).text().toLowerCase();
+		return this.filter_terms.every((t) => text.indexOf(t) > -1);
 	}
 
 
@@ -86,7 +111,9 @@ export class LogWidget extends SingleTypePanelWidgetBase {
 				   '<span class="name">[' + msg.name + "]</span> " +
 				   '<span class="'+level_class+'">['+level_label+'] ' + msg.msg + '</span>'
 				   "</div>";
-		this.widget_el.append(line);
+		let line_el = $(line);
+		if (!this.lineMatches(line_el)) line_el.addClass("filtered-out");
+		this.widget_el.append(line_el);
 
 		// trim lines
 		if ($("#panel_widget_" + this.panel.n + ".autoscroll .log_line").length > LogWidget.MAX_TRACE_LENGTH) {

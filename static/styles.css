@@ -8095,3 +8095,17 @@ BODY.desktop-ui .panel-btn {
 BODY.desktop-ui .monitor_menu {
 	top: -5px;
 }
+
+/* text filter inputs in panel menus (log widget, source data) */
+.monitor_menu_content .menu_line.filter_line INPUT {
+	float: none;
+	top: 0px;
+	width: calc(100% - 16px);
+	margin: 3px 8px 5px 8px;
+	box-sizing: border-box;
+	padding: 2px 6px;
+}
+
+.log_line.filtered-out {
+	display: none;
+}
