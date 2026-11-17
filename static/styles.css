@@ -7391,8 +7391,47 @@ BODY.touch-ui #service-input-dialog .btn-tabs.sortable .btn-tab:not(.touch-sorta
 	margin-bottom: -5px;
 }
 
-#node-params-dialog .param-name:nth-child(even) {
+#node-params-dialog .param-name.alt {
 	background-color: rgba(255, 255, 255, 0.064);
+}
+
+#node-params-dialog .param-name.filtered-out {
+	display: none;
+}
+
+#node-params-dialog .no-match {
+	text-align: center;
+	opacity: 0.6;
+	line-height: 30px;
+}
+
+#node-params-dialog .title-row {
+	height: 17px;
+	margin-bottom: 5px;
+	overflow: visible;
+}
+
+#node-params-dialog .title-row .title {
+	margin-bottom: 0px;
+}
+
+#node-params-dialog .params-filter {
+	float: right;
+	width: 45%;
+	height: 22px;
+	margin-top: -3px;
+	box-sizing: border-box;
+	padding: 0px 6px;
+	font-size: 13px;
+	color: #fff;
+	background: #332f2f;
+	border: 1px solid #5b5252;
+	border-radius: 4px;
+	outline: none;
+}
+
+#node-params-dialog .params-filter:focus {
+	border-color: #ff8c00;
 }
 
 #node-params-dialog .param-type {

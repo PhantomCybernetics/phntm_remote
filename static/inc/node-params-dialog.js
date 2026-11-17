@@ -255,8 +255,20 @@ export class NodeParamsDialog {
 		let that = this;
 
 		this.cont_el.empty();
+		this.param_entries = [];
+		this.filter_el = $('<input type="text" class="params-filter" placeholder="Filter..." title="Filter parameters by name or type" spellcheck="false" autocomplete="off">');
+		this.filter_el.on("input", () => this.applyFilter());
+		this.filter_el.on("keydown", (ev) => {
+			if (ev.key == "Escape" && this.filter_el.val() !== "") {
+				// clear filter first, close dialog only if already empty
+				this.filter_el.val("");
+				this.applyFilter();
+				ev.stopPropagation();
+			}
+		});
+		this.cont_el.append($("<h3></h3>").text(this.node.node));
 		this.cont_el.append(
-			$("<h3>" + this.node.node + '</h3><span class="title">Runtime ROS Parameters</span>'),
+			$('<div class="title-row"><span class="title">Runtime ROS Parameters</span></div>').append(this.filter_el),
 		);
 
 		this.list_el = $('<div class="params-list"></div>');
@@ -330,6 +342,10 @@ export class NodeParamsDialog {
 									let type_hr = that.getTypeHR(value["type"]);
 									let param_label_el = $('<div class="param-name prevent-select">' + name + '<span class="param-type">' + type_hr + "</span></div>");
 									that.list_el.append(param_label_el);
+									that.param_entries.push({
+										el: param_label_el,
+										text: (name + " " + type_hr).toLowerCase(),
+									});
 									param_label_el.click((ev) => {
 										that.selectParam(
 											name,
@@ -340,6 +356,9 @@ export class NodeParamsDialog {
 										);
 									});
 								}
+								that.no_match_el = $('<div class="no-match">No matching parameters</div>').hide();
+								that.list_el.append(that.no_match_el);
+								that.applyFilter();
 							},
 						);
 					},
@@ -563,6 +582,29 @@ export class NodeParamsDialog {
 			.show()
 			.click((ev) => this.hide());
 		$("BODY").addClass("no-scroll");
+	}
+
+	/**
+	 * Shows only params whose name or type contains all of the
+	 * whitespace-separated terms typed in the filter box (case-insensitive).
+	 */
+	applyFilter() {
+		const terms = this.filter_el
+			.val()
+			.toLowerCase()
+			.split(/\s+/)
+			.filter((t) => t.length);
+
+		let visible = 0;
+		this.param_entries.forEach((entry) => {
+			const match = terms.every((t) => entry.text.indexOf(t) > -1);
+			entry.el.toggleClass("filtered-out", !match);
+			// striping by visible position, :nth-child can't skip hidden rows
+			entry.el.toggleClass("alt", match && visible % 2 == 1);
+			if (match) visible++;
+		});
+
+		if (this.no_match_el) this.no_match_el.toggle(this.param_entries.length > 0 && visible == 0);
 	}
 
 	getTypeHR(i_type) {
